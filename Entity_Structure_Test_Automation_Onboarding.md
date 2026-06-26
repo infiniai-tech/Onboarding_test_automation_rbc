@@ -1,10 +1,5 @@
-# Entity Structure Test Automation -- New Team Member Onboarding Guide
+# Entity Structure Test Automation 
 
-This guide is the starting point for new team members joining the Entity Structure test automation project at RBC.
-It explains what the repository does, how the system is architected, and what technologies are used across testing, reporting, data handling, and authentication.
-Step-by-step diagrams show how test data is prepared, how OAuth tokens are obtained from Okta, how API calls are made, and how results are reported via Allure and qTest.
-The CI/CD section covers the nightly GitHub Actions pipeline that runs tests automatically and publishes the Allure report to GitHub Pages.
-A 60-second summary at the end gives a quick-reference overview of the full stack for anyone who needs the essentials at a glance.
 
 ## What Does This Repository Do?
 
