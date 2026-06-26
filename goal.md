@@ -32,3 +32,11 @@ PHASE 5 - HTML Report
 -settings settings.xml
 → Opens browser with full visual report
 * Each test shows: pass/fail, HTTP request, HTTP response, step breakdown + Results also pushed to Test automatically
+
+
+# Questions
+1. How to identify delta APIs
+2. Run only delta cases
+3. Give flexivity to run full suite or on-demand cases
+4. Can we use skills to execute
+5. What is the tech stack, frameworks they have to support AI agents?
