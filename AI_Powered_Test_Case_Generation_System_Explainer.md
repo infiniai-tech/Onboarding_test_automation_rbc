@@ -1,8 +1,6 @@
 # AI-Powered Test Case Generation System -- Explainer Guide
 
-> **Note:** The source images are partially blurred/low resolution. The
-> content below is transcribed as accurately as possible. Where diagrams
-> appeared, they have been recreated in Mermaid.
+
 
 # Architecture Overview
 
