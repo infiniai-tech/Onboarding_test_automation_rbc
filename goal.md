@@ -5,11 +5,13 @@ PHASE 1 - Story Analysis (I fetch from Jira)
 * Identify gaps (missing ACs, unclear fields, unknown error codes)
 * Save: context/qa/USCM-XXXXX/story-analysis. md
 YOU REVIEW - confirm gaps are resolved, story is ready
+
 PHASE 2 - Test Case Design
 * Map each AC to 1+ test cases (happy path + negatives + edge cases)
 * Write step-by-step TC table (Action → Expected Result)
 * Save: context/qa/USCM-XXXXX/USCM-XXXOXX-e2e-test-cases .md
 YOU REVIEW - approve or adjust test cases
+
 PHASE 3 - Push TCs to qTest
 * Creates Sprint folder if it doesn't exist
 * Creates Story folder inside sprint
@@ -17,7 +19,8 @@ PHASE 3 - Push TCs to qTest
 * Links Jira requirement to all TCS
 * Gets back TC IDs (e.g. TC-18825)
 PHASE 4 - Generate Java Automation
-* Creates src/test/java/api/tests/FCRU/YourNewTest. java
+
+* Creates src/test/java/api/tests/PRT0/YourNewTest. java
 * Adds @TestCase annotation with the TC IDs from Test
 * Registers class in TestNG_EntityStructure.xml
 * Adds any missing factory methods / endpoints if needed
