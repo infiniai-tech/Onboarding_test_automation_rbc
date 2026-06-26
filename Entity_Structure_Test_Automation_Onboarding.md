@@ -1,4 +1,10 @@
-# Entity Structure Test Automation --- New Team Member Onboarding Guide
+# Entity Structure Test Automation -- New Team Member Onboarding Guide
+
+This guide is the starting point for new team members joining the Entity Structure test automation project at RBC.
+It explains what the repository does, how the system is architected, and what technologies are used across testing, reporting, data handling, and authentication.
+Step-by-step diagrams show how test data is prepared, how OAuth tokens are obtained from Okta, how API calls are made, and how results are reported via Allure and qTest.
+The CI/CD section covers the nightly GitHub Actions pipeline that runs tests automatically and publishes the Allure report to GitHub Pages.
+A 60-second summary at the end gives a quick-reference overview of the full stack for anyone who needs the essentials at a glance.
 
 ## What Does This Repository Do?
 
@@ -7,15 +13,17 @@
 This is a **test automation project** that automatically checks whether
 RBC's **Entity Structure** APIs behave correctly.
 
-It: 1. Sends requests to the API. 2. Checks the responses. 3. Reports
-the results.
+It:
+1. Sends requests to the API.
+2. Checks the responses.
+3. Reports the results.
 
 ### What is "Entity Structure"?
 
 The **Entity Structure** service manages relationships between financial
 entities.
 
-``` mermaid
+```mermaid
 flowchart TD
     A["Company A (Parent Corp)"]
     B["Company B (Subsidiary)"]
@@ -33,11 +41,11 @@ flowchart TD
     C --- ACC2
 ```
 
-------------------------------------------------------------------------
+---
 
 ## The Big Picture -- Architecture Diagram
 
-``` mermaid
+```mermaid
 flowchart LR
 subgraph Repo["This Repository (Test Automation Framework)"]
 TC["Test Class"]
@@ -68,63 +76,63 @@ ASSERT-->ALLURE-->QTEST
 ASSERT-->GH
 ```
 
-------------------------------------------------------------------------
+---
 
 ## Technology Stack Explained
 
 ### Core Languages & Build Tools
 
-  Technology     Version Purpose
-  ------------ --------- ---------------------------------
-  Java                21 Enterprise programming language
-  Maven              3.x Build & dependency management
+| Technology | Version | Purpose |
+| --- | --- | --- |
+| Java | 21 | Enterprise programming language |
+| Maven | 3.x | Build & dependency management |
 
 ### Testing Framework
 
-  Technology       Version Purpose
-  -------------- --------- -------------
-  TestNG            7.10.2 Test runner
-  REST Assured       5.4.0 API testing
+| Technology | Version | Purpose |
+| --- | --- | --- |
+| TestNG | 7.10.2 | Test runner |
+| REST Assured | 5.4.0 | API testing |
 
 ### Reporting
 
-  Technology     Version Purpose
-  ------------ --------- --------------
-  Allure          2.30.0 HTML reports
+| Technology | Version | Purpose |
+| --- | --- | --- |
+| Allure | 2.30.0 | HTML reports |
 
 ### Data Handling
 
-  Technology     Version Purpose
-  ------------ --------- -----------------------
-  Jackson         2.18.6 JSON processing
-  Lombok         1.18.44 Boilerplate reduction
-  JavaFaker        1.0.2 Fake data generation
-  Apache POI       5.2.3 Excel reader
+| Technology | Version | Purpose |
+| --- | --- | --- |
+| Jackson | 2.18.6 | JSON processing |
+| Lombok | 1.18.44 | Boilerplate reduction |
+| JavaFaker | 1.0.2 | Fake data generation |
+| Apache POI | 5.2.3 | Excel reader |
 
 ### Database
 
-  Technology         Version Purpose
-  ---------------- --------- ------------------
-  MongoDB Driver       5.1.1 Cosmos DB client
+| Technology | Version | Purpose |
+| --- | --- | --- |
+| MongoDB Driver | 5.1.1 | Cosmos DB client |
 
 ### Infrastructure
 
--   GitHub Actions
--   GitHub Pages
--   qTest
+- GitHub Actions
+- GitHub Pages
+- qTest
 
 ### Authentication
 
--   Okta OAuth 2.0
--   Corporate Proxy
+- Okta OAuth 2.0
+- Corporate Proxy
 
-------------------------------------------------------------------------
+---
 
 ## How Data Flows Through the System
 
 ### Test Execution Data Flow
 
-``` mermaid
+```mermaid
 flowchart TD
 subgraph Phase1["Phase 1: Test Data Preparation"]
 EXCEL["EntitlementDataQAT.xlsx"]
@@ -164,11 +172,11 @@ ASSERT-->QTEST
 ASSERT-->CONSOLE
 ```
 
-------------------------------------------------------------------------
+---
 
 ## How Tests Run Automatically
 
-``` mermaid
+```mermaid
 flowchart TD
 TRIGGER["Nightly Schedule or Manual Trigger"]
 JOB1["Run API Tests
@@ -186,34 +194,34 @@ RESULT["Published Allure Report"]
 TRIGGER-->JOB1-->JOB2-->RESULT
 ```
 
-------------------------------------------------------------------------
+---
 
 ## Summary -- The 60-Second Version
 
--   Write Java automated tests.
--   Authenticate with Okta.
--   Call FCRU APIs.
--   Validate responses.
--   Publish Allure and qTest reports.
--   Run nightly with GitHub Actions.
+- Write Java automated tests.
+- Authenticate with Okta.
+- Call FCRU APIs.
+- Validate responses.
+- Publish Allure and qTest reports.
+- Run nightly with GitHub Actions.
 
 ### Tech Stack
 
--   Java 21
--   Maven
--   TestNG
--   REST Assured
--   Allure
--   GitHub Actions
+- Java 21
+- Maven
+- TestNG
+- REST Assured
+- Allure
+- GitHub Actions
 
 ### API Under Test
 
--   FCRU Entity Structure
+- FCRU Entity Structure
 
 ### Database
 
--   Cosmos DB (MongoDB compatible)
+- Cosmos DB (MongoDB compatible)
 
 ### Authentication
 
--   Okta OAuth 2.0
+- Okta OAuth 2.0

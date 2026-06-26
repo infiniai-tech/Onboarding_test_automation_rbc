@@ -1,7 +1,87 @@
-# QA Automation & PRT0 Functional Regression Guide
 
-> Reconstructed from onboarding screenshots. Minor wording may differ
-> where images were blurred.
+# QA Automation & PRT0 Functional Regression Guide(API testing /middelware)
+
+## Framework Overview
+
+The **PRTO Functional Regression Testing Framework** is a Maven-based Java test automation suite designed to validate the Core Banking Middleware platform — microservices deployed on Azure Kubernetes Service (AKS) in the westus2 region, covering REST API testing, Apache Kafka event-driven messaging validation, and end-to-end banking workflow verification.
+
+The framework is built on TestNG 7.7.1 with REST Assured 5.3.0 for HTTP API testing and Apache Kafka Client 3.9.1 for asynchronous event stream validation. Over 40 GitHub Actions workflows orchestrate scheduled and on-demand test execution across DEV and QAT environments, with results published to a GitHub Pages dashboard for real-time visibility.
+
+### Tool Stack
+
+| Category | Technology |
+| --- | --- |
+| Language | Java 8 / 9 |
+| Build Tool | Apache Maven |
+| Test Framework | TestNG 7.7.1 |
+| API Testing | REST Assured 5.3.0 |
+| Messaging | Apache Kafka 3.9.1 |
+| CI/CD | GitHub Actions (40+ workflows) |
+| Target Environments | DEV , QAT  |
+| Infrastructure | Azure AKS (westus2), Apigee API Gateway |
+
+---
+
+## Architecture — Swimlane Diagram
+
+```mermaid
+flowchart TD
+    subgraph CICD["Swimlane 1 · CI/CD Layer — DevOps / Automation"]
+        GHA["GitHub Actions\n40+ Workflows"]
+        GPG["GitHub Pages\nTest Dashboard"]
+    end
+
+    subgraph TFL["Swimlane 2 · Test Framework Layer — QA Engineers"]
+        TNG["TestNG 7.7.1"]
+        RA["REST Assured 5.3.0"]
+        KPU["Kafka Producer Utils"]
+        KCU["Kafka Consumer Utils"]
+        BTN["BaseTestNG"]
+    end
+
+    subgraph AGL["Swimlane 3 · API Gateway Layer — Platform / Infra"]
+        AGD["Apigee Gateway\nDEV"]
+        AGQ["Apigee Gateway\nQAT"]
+    end
+
+    subgraph MSL["Swimlane 4 · Microservices Layer — Azure AKS westus2"]
+        MS1["Account Reserve · DDA · TD\nCustomer · Rate · FX"]
+        MS2["ACH · DOL · ERS\nBilling · Limit Management"]
+    end
+
+    subgraph EIL["Swimlane 5 · Event Infrastructure — Middleware Team"]
+        KCC["Kafka Cloud\nCluster"]
+        KOC["Kafka On-Prem\nCluster"]
+        SR["Schema\nRegistry"]
+    end
+
+    subgraph ESL["Swimlane 6 · External Services — Cloud / Security / DevOps"]
+        ABS["Azure Blob\nStorage"]
+        AUTH["Okta / PingFed\nAuthentication"]
+        LD["LaunchDarkly\nFeature Flags"]
+        QT["qTest\nManagement"]
+        ART["Artifactory\nMaven Repo"]
+    end
+
+    GHA -->|"schedules & triggers"| TNG
+    GHA -->|"publishes results"| GPG
+    TNG -->|"HTTP calls"| AGD
+    TNG -->|"HTTP calls"| AGQ
+    AGD -->|"routes to"| MS1
+    AGQ -->|"routes to"| MS2
+    TNG -->|"event streams"| KCC
+    TNG -->|"event streams"| KOC
+    KCC <-->|"schema"| SR
+    KOC <-->|"schema"| SR
+    TNG -->|"OAuth tokens"| AUTH
+    TNG -->|"flag checks"| LD
+    TNG -->|"test results"| QT
+    TNG -->|"fetch deps"| ART
+    GPG -->|"links to"| QT
+    MS1 & MS2 -->|"blob storage"| ABS
+```
+
+---
 
 # End-to-End Automation Flow
 
