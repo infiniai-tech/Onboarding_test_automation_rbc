@@ -1,8 +1,6 @@
 # Entity Structure Test Automation 
 
 
-## What Does This Repository Do?
-
 ### The Simple Version
 
 This is a **test automation project** that automatically checks whether
@@ -42,33 +40,58 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-subgraph Repo["This Repository (Test Automation Framework)"]
-TC["Test Class"]
-REST["REST Assured Client"]
-ASSERT["Assertions"]
-TC-->REST-->ASSERT
-end
 
-subgraph OKTA["OKTA OAuth"]
-TOKEN["Token Service"]
-end
+    %% ==========================
+    %% System Architecture
+    %% ==========================
 
-subgraph API["FCRU API Service"]
-REL["/origin/relationship\nPOST\nPUT\nGET"]
-TAX["/origin/taxonomy\nGET"]
-DB["Azure K8S\nCosmos DB"]
-end
+    subgraph REPO["THIS REPOSITORY<br/>(Test Automation Framework)"]
+        TC["Test Class<br/>createRel..."]
+        RA["REST Assured<br/>Client"]
+        AS["Assertions<br/>Pass/Fail"]
 
-ALLURE["Allure Report"]
-QTEST["qTest"]
-GH["GitHub Actions"]
+        TC --> RA
+        RA --> AS
+    end
 
-TC--Get Token-->TOKEN
-TOKEN--Bearer Token-->REST
-REST--API Call-->REL
-REL--JSON-->REST
-ASSERT-->ALLURE-->QTEST
-ASSERT-->GH
+    subgraph OKTA["OKTA (OAuth)<br/>Identity Mgmt"]
+        TOKEN["Token<br/>Service"]
+    end
+
+    subgraph API["FCRU API SERVICE<br/>(What we're testing)"]
+        REL["/origin/relationship/<br/><br/>POST - Create<br/>PUT - Update<br/>GET - Read"]
+
+        TAX["/origin/taxonomy<br/><br/>GET - Types"]
+
+        INFO["Backend: Azure K8S<br/>Database: Cosmos DB"]
+    end
+
+    subgraph ALLURE["ALLURE REPORT<br/>(HTML Reports)"]
+        AR["• Test Results<br/>• Screenshots<br/>• Request Logs<br/>• Trend Graphs"]
+    end
+
+    subgraph QTEST["qTest<br/>(Test Management)"]
+        QT["• Stores test cases<br/>• Tracks executions<br/>• Links to requirements"]
+    end
+
+    subgraph GHA["GITHUB ACTIONS<br/>(CI/CD Pipeline)"]
+        GH["• Nightly runs<br/>• Auto-reports<br/>• GitHub Pages"]
+    end
+
+    %% OAuth Flow
+    TC -- "1. Get Token" --> TOKEN
+    TOKEN -- "2. Return Bearer Token" --> TC
+
+    %% API Flow
+    RA -- "3. API Call with Token" --> REL
+    REL -- "4. API Response (JSON)" --> RA
+
+    %% Reporting
+    AS --> AR
+    AR --> QT
+
+    %% CI/CD
+    REPO -->|"Runs on"| GH
 ```
 
 ---
@@ -129,64 +152,77 @@ ASSERT-->GH
 
 ```mermaid
 flowchart TD
-subgraph Phase1["Phase 1: Test Data Preparation"]
-EXCEL["EntitlementDataQAT.xlsx"]
-FACTORY["RelationshipFactory.java"]
-MAP["Test Data Map"]
-EXCEL-->MAP
-FACTORY-->MAP
-end
 
-subgraph Phase2["Phase 2: Authentication"]
-AUTH["OAuthTokenManager"]
-OKTA["OKTA Server"]
-AUTH-->OKTA
-OKTA-->AUTH
-end
+    %% ============================
+    %% Phase 1
+    %% ============================
+    subgraph P1["Phase 1: Test Data Preparation"]
 
-subgraph Phase3["Phase 3: API Call"]
-REST["REST Assured"]
-API["FCRU API"]
-REST-->API
-API-->REST
-end
+        EXCEL["Static Test Data<br/>(Excel / CSV / Config Files)"]
 
-subgraph Phase4["Phase 4: Validation"]
-ASSERT["Assertions"]
-end
+        GENERATED["Dynamic Test Data<br/>(Factories / Builders / Faker)"]
 
-subgraph Phase5["Phase 5: Reporting"]
-ALLURE["Allure"]
-QTEST["qTest"]
-CONSOLE["Console"]
-end
+        MAP["Unified Test Data Store<br/><br/>Map&lt;TestCaseId, Field → Value&gt;<br/><br/>Example:<br/>• Relationship Name<br/>• Relationship Type<br/>• Expected Status"]
 
-MAP-->AUTH-->REST-->ASSERT
-ASSERT-->ALLURE
-ASSERT-->QTEST
-ASSERT-->CONSOLE
-```
+        EXCEL -->|"Read Test Data"| MAP
+        GENERATED -->|"Generate Test Data"| MAP
+    end
 
----
+    %% ============================
+    %% Phase 2
+    %% ============================
+    subgraph P2["Phase 2: Authentication"]
 
-## How Tests Run Automatically
+        TOKEN["Token Manager<br/><br/>• Checks cached token<br/>• Refreshes if expired"]
 
-```mermaid
-flowchart TD
-TRIGGER["Nightly Schedule or Manual Trigger"]
-JOB1["Run API Tests
-- Checkout
-- Java 21
-- Inject Secrets
-- mvn test
-- Upload Results"]
-JOB2["Deploy Allure Report
-- Download Results
-- Generate Report
-- Deploy GitHub Pages"]
-RESULT["Published Allure Report"]
+        AUTH["Identity Provider (OAuth)<br/><br/>• Validates credentials<br/>• Issues JWT Access Token"]
 
-TRIGGER-->JOB1-->JOB2-->RESULT
+        TOKEN -->|"Authentication Request"| AUTH
+        AUTH -->|"JWT Access Token"| TOKEN
+    end
+
+    %% ============================
+    %% Phase 3
+    %% ============================
+    subgraph P3["Phase 3: API Execution"]
+
+        CLIENT["REST Client<br/><br/>Request Specification<br/>• Base URL<br/>• Bearer Token<br/>• Headers<br/>• Request Body"]
+
+        API["Target REST API<br/><br/>Processes request<br/>Returns JSON Response"]
+
+        CLIENT -->|"HTTP Request"| API
+        API -->|"JSON Response"| CLIENT
+    end
+
+    %% ============================
+    %% Phase 4
+    %% ============================
+    subgraph P4["Phase 4: Validation"]
+
+        ASSERT["Assertions<br/><br/>✓ Status Code<br/>✓ Response Fields<br/>✓ Business Rules<br/>✓ Required Values<br/><br/>PASS or FAIL"]
+
+    end
+
+    %% ============================
+    %% Phase 5
+    %% ============================
+    subgraph P5["Phase 5: Reporting"]
+
+        REPORT["Test Report<br/><br/>• HTML Reports<br/>• Execution History<br/>• Logs<br/>• Screenshots"]
+
+        MGMT["Test Management Tool<br/><br/>• Test Results<br/>• Execution Status<br/>• Traceability"]
+
+        CONSOLE["Console Output<br/><br/>• Logs<br/>• Errors<br/>• Summary"]
+
+    end
+
+    %% Flow
+    MAP --> TOKEN
+    TOKEN -->|"Bearer Token"| CLIENT
+    CLIENT --> ASSERT
+    ASSERT --> REPORT
+    ASSERT --> MGMT
+    ASSERT --> CONSOLE
 ```
 
 ---
