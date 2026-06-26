@@ -163,9 +163,13 @@ AI proposes a change to an agent instruction file, then governance-check-py runs
 
 |Metric | Target |
 -------.-------
+
 |Test cases passing human A review without changes | ≥ 95% |
+
 |Per-TC validation score | ≥ 80 / 100 |
+
 |Story quality gate (minimum to proceed) | ≥ 70 / 100 |
+
 |Hallucinations (AI making de rules not in KB) | 0 |
 ## Quick Start
 
