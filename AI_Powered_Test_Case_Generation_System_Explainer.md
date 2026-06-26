@@ -174,3 +174,33 @@ AI proposes a change to an agent instruction file, then governance-check-py runs
 ## Quick Start
 
 1.  prompt as ,Generate the TC for user stoty -xxxx
+
+
+Scripts:
+
+jira_fetcher. py
+Fetches Jira user stories from the Jira REST API and saves them as structured markdown files with metadata tables. Supports pushing quality assessment reports back to Jira tickets as attachments with summary comments.
+scripts/confluence-kb-builder-py
+Fetches Confluence pages (with all sub-pages) for a configured application and writes structured raw-source staging files to kb-sources/{app_1d}/. Supports full fetch and incremental update modes with manifest tracking, attachment downloads, and consolidated context generation.
+
+scripts/fetch-jira-story-py
+Fetches Jira user story fields (description, acceptance criteria, linked issues) Via REST API and saves them as markdown. Supports pushing quality assessment reports and scores back to Jira tickets as attachments and comments.
+
+scripts/generate-report. py
+Generates interactive HTML reports from pipeline output artifacts (coverage, strategy, reviews, refinements) by normalizing JSON data. Supports standalone HTML (file://
+compatible) with embedded data and HTTP server mode with live browser preview.
+
+scripts/ governance-check.py
+Enforces governance for protected Copilot customization files by detecting git changes and generating approval reports. Blocks commits to protected paths (agents, prompts, instructions) unless explicitly overridden with a manual review flag.
+
+scripts/qtest-csv-to-kb-source.py
+Converts Test XLSX/CSV exports into structured markdown staging files organized by KB module with automatic module detection. Supports incremental updates, duplicate detection, and auto-generates module mapping configuration for SME review.
+
+scripts/qtest-kb-importer-py
+Imports preprocessed qTest test cases into the KB structure by generating test-suite-index, enriching entity files, and updating knowledge-health. Executes Pass 4a-4e of the knowledge curation pipeline to integrate test coverall data into the knowledge base. scripts/
+
+qtest-preprocessor.py
+Enriches raw Test staging files with semantic metadata (intent, layer, risk level, behavior type) and AI-based module classification. Processes tc-* md files in-place, adding semantic context sections and updating frontmatter for KB import readiness.
+
+scripts/validate-test-cases.py
+Validates test case quality using an 8-dimension scoring rubric (assertion quality, density, clarity, traceability, etc.). Detects duplicates, identifies coverage gaps, and generates validation reports with pass/fail scores against an 80/100 threshold.
