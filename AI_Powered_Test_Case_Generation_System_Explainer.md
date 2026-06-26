@@ -1,6 +1,5 @@
 # AI- Test Case Generation System -- Explainer Guide
 
-only TC 
 
 ## Architecture Overview
 
