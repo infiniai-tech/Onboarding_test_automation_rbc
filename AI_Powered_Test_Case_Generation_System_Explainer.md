@@ -1,4 +1,4 @@
-# AI- Test Case Generation System -- Explainer Guide
+# AI- Test Case Generation System
 
 
 ## Architecture Overview
