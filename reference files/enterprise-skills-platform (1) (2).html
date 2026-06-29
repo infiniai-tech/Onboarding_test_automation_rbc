@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enterprise Engineering Skills Platform — Architecture Proposal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --navy: #0D1B2A;
+    --navy-mid: #1A2F45;
+    --navy-light: #243B55;
+    --blue: #1E6FD9;
+    --blue-light: #3D8EF0;
+    --cyan: #00C2CB;
+    --amber: #F59E0B;
+    --green: #10B981;
+    --red: #EF4444;
+    --slate: #64748B;
+    --border: #1E3A5F;
+    --text: #E2EAF4;
+    --text-muted: #8BA3BE;
+    --surface: #122036;
+    --surface-2: #1A2F45;
+    --white: #FFFFFF;
+    --font-main: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-main);
+    background: var(--navy);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+
+  /* ── COVER ─────────────────────────────────────────────────── */
+  .cover {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #050E1A 0%, #0D1B2A 40%, #122036 100%);
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    text-align: center; padding: 60px 40px;
+    position: relative; overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 30% 50%, rgba(30,111,217,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 30%, rgba(0,194,203,0.08) 0%, transparent 50%);
+  }
+  .cover-grid {
+    position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(30,111,217,0.06) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(30,111,217,0.06) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  .cover-inner { position: relative; z-index: 2; max-width: 900px; }
+  .cover-eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: rgba(30,111,217,0.15); border: 1px solid rgba(30,111,217,0.35);
+    border-radius: 100px; padding: 6px 18px; margin-bottom: 32px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--cyan);
+  }
+  .cover-eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); }
+  .cover h1 {
+    font-size: clamp(32px, 5vw, 64px);
+    font-weight: 800; line-height: 1.1;
+    letter-spacing: -0.02em; margin-bottom: 16px;
+    background: linear-gradient(135deg, #fff 0%, #a8c8f0 50%, var(--cyan) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .cover-sub {
+    font-size: clamp(16px, 2vw, 22px);
+    color: var(--text-muted); margin-bottom: 48px; font-weight: 300;
+    letter-spacing: 0.02em;
+  }
+  .cover-meta {
+    display: flex; gap: 40px; justify-content: center; flex-wrap: wrap;
+    font-size: 12px; color: var(--text-muted); letter-spacing: 0.05em;
+    border-top: 1px solid var(--border); padding-top: 32px; margin-top: 32px;
+  }
+  .cover-meta span strong { color: var(--text); display: block; font-size: 14px; }
+
+  /* ── LAYOUT ─────────────────────────────────────────────────── */
+  .toc-nav {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 40px; position: sticky; top: 0; z-index: 100;
+  }
+  .toc-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; gap: 0; overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .toc-inner::-webkit-scrollbar { display: none; }
+  .toc-inner a {
+    color: var(--text-muted); text-decoration: none;
+    font-size: 12px; font-weight: 500; letter-spacing: 0.05em;
+    padding: 14px 18px; white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .toc-inner a:hover { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+  .doc { max-width: 1100px; margin: 0 auto; padding: 60px 40px; }
+
+  /* ── SECTIONS ───────────────────────────────────────────────── */
+  .section { margin-bottom: 80px; scroll-margin-top: 60px; }
+  .section-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--blue-light);
+    margin-bottom: 12px;
+  }
+  h2 {
+    font-size: clamp(22px, 3vw, 36px);
+    font-weight: 800; line-height: 1.15;
+    letter-spacing: -0.01em; margin-bottom: 20px;
+    color: var(--white);
+  }
+  h3 {
+    font-size: 18px; font-weight: 700; color: var(--text);
+    margin: 32px 0 12px;
+  }
+  h4 { font-size: 14px; font-weight: 600; color: var(--cyan); margin: 20px 0 8px; text-transform: uppercase; letter-spacing: 0.08em; }
+  p { color: var(--text-muted); margin-bottom: 16px; max-width: 800px; }
+
+  /* ── CALLOUT / EXEC SUMMARY ─────────────────────────────────── */
+  .callout {
+    background: linear-gradient(135deg, rgba(30,111,217,0.1) 0%, rgba(0,194,203,0.05) 100%);
+    border: 1px solid rgba(30,111,217,0.3);
+    border-left: 4px solid var(--blue);
+    border-radius: 8px; padding: 24px 28px; margin: 24px 0;
+  }
+  .callout-title { font-size: 13px; font-weight: 700; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+  .callout p { color: var(--text); font-size: 15px; line-height: 1.7; max-width: 100%; margin: 0; }
+
+  /* ── KPI CARDS ──────────────────────────────────────────────── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin: 24px 0; }
+  .kpi-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px; text-align: center;
+  }
+  .kpi-num { font-size: 36px; font-weight: 800; line-height: 1; color: var(--blue-light); }
+  .kpi-unit { font-size: 14px; font-weight: 500; color: var(--cyan); margin-bottom: 6px; }
+  .kpi-label { font-size: 12px; color: var(--text-muted); }
+
+  /* ── TABLES ─────────────────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; margin: 24px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead tr { background: rgba(30,111,217,0.2); }
+  th {
+    padding: 12px 16px; text-align: left;
+    font-weight: 600; font-size: 11px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--cyan);
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 11px 16px; border-bottom: 1px solid rgba(30, 58, 95, 0.6); color: var(--text-muted); vertical-align: top; }
+  tr:hover td { background: rgba(30,111,217,0.05); }
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 100px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.05em;
+  }
+  .badge-green { background: rgba(16,185,129,0.15); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+  .badge-amber { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+  .badge-blue  { background: rgba(30,111,217,0.15); color: var(--blue-light); border: 1px solid rgba(30,111,217,0.3); }
+  .badge-cyan  { background: rgba(0,194,203,0.12); color: var(--cyan); border: 1px solid rgba(0,194,203,0.3); }
+
+  /* ── CODE BLOCK ─────────────────────────────────────────────── */
+  .code-block {
+    background: #070F1A; border: 1px solid var(--border);
+    border-radius: 8px; padding: 20px 24px; margin: 16px 0;
+    overflow-x: auto;
+  }
+  .code-block .lang-label {
+    font-size: 10px; color: var(--slate); letter-spacing: 0.1em;
+    text-transform: uppercase; margin-bottom: 10px;
+    font-family: var(--font-mono);
+  }
+  pre { font-family: var(--font-mono); font-size: 13px; line-height: 1.6; color: #A8C8F0; }
+  .kw { color: #7DD3FC; } .str { color: #86EFAC; } .cmt { color: #4B6A8A; }
+
+  /* ── SVG DIAGRAM WRAPPER ────────────────────────────────────── */
+  .diagram-wrap {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 32px 24px; margin: 24px 0;
+    overflow-x: auto;
+  }
+  .diagram-title {
+    font-size: 12px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--text-muted); margin-bottom: 20px;
+    text-align: center;
+  }
+
+  /* ── PHASE CARDS ────────────────────────────────────────────── */
+  .phase-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 24px 0; }
+  .phase-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 24px;
+  }
+  .phase-num { font-size: 42px; font-weight: 800; color: rgba(30,111,217,0.25); line-height: 1; margin-bottom: 8px; }
+  .phase-card h3 { margin: 0 0 10px; font-size: 15px; }
+  .phase-card p { font-size: 13px; max-width: 100%; margin: 0; }
+
+  /* ── SKILL CHIPS ─────────────────────────────────────────────── */
+  .skill-grid { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
+  .skill-chip {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 7px 14px;
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
+    transition: all 0.2s;
+  }
+  .skill-chip:hover { border-color: var(--blue); color: var(--blue-light); }
+
+  /* ── FOOTER ─────────────────────────────────────────────────── */
+  footer {
+    border-top: 1px solid var(--border); padding: 40px;
+    text-align: center; color: var(--text-muted);
+    font-size: 12px;
+  }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+  @media (max-width: 640px) {
+    .doc { padding: 32px 20px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-grid"></div>
+  <div class="cover-inner">
+    <div class="cover-eyebrow">Confidential — Executive Architecture Proposal</div>
+    <h1>Enterprise Engineering<br>Skills Platform</h1>
+    <p class="cover-sub">Transforming Fragmented Automation into a Unified Engineering Operating System</p>
+    <div class="cover-meta">
+      <span><strong>Classification</strong>Internal / Restricted</span>
+      <span><strong>Version</strong>1.0 — 2025</span>
+      <span><strong>Audience</strong>CIO · CTO · VP Engineering · EA Board</span>
+      <span><strong>Status</strong>Proposal for Approval</span>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="toc-nav">
+  <div class="toc-inner">
+    <a href="#exec">Executive Summary</a>
+    <a href="#challenges">Challenges</a>
+    <a href="#vision">Vision</a>
+    <a href="#arch">Architecture</a>
+    <a href="#phase1">Phase 1</a>
+    <a href="#phase2">Phase 2</a>
+    <a href="#copilot">Copilot Integration</a>
+    <a href="#security">Security</a>
+    <a href="#governance">Governance</a>
+    <a href="#scalability">Scalability</a>
+    <a href="#roi">ROI</a>
+    <a href="#roadmap">Roadmap</a>
+    <a href="#kpis">KPIs</a>
+  </div>
+</nav>
+
+<div class="doc">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 1 — EXECUTIVE SUMMARY
+═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="exec">
+  <div class="section-label">01 — Executive Summary</div>
+  <h2>The Case for a Unified<br>Engineering Platform</h2>
+
+  <div class="callout">
+    <div class="callout-title">Executive Insight</div>
+    <p>Our engineering organization is spending an estimated <strong>35–45% of automation effort</strong> rebuilding identical capabilities across repositories. The Enterprise Engineering Skills Platform eliminates this duplication by establishing a centralized, versioned, governed library of reusable engineering skills — the single source of engineering truth across every team, product line, and AI consumer.</p>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-num">70%</div><div class="kpi-unit">%</div><div class="kpi-label">Reduction in duplicate automation effort</div></div>
+    <div class="kpi-card"><div class="kpi-num">4×</div><div class="kpi-unit">faster</div><div class="kpi-label">New repository onboarding time</div></div>
+    <div class="kpi-card"><div class="kpi-num">$3.8M</div><div class="kpi-unit">saved</div><div class="kpi-label">Projected 3-year engineering cost savings</div></div>
+    <div class="kpi-card"><div class="kpi-num">100%</div><div class="kpi-unit">coverage</div><div class="kpi-label">SDLC automation coverage target</div></div>
+    <div class="kpi-card"><div class="kpi-num">1000+</div><div class="kpi-unit">repos</div><div class="kpi-label">Target platform scale</div></div>
+    <div class="kpi-card"><div class="kpi-num">&lt;2 wks</div><div class="kpi-unit">onboard</div><div class="kpi-label">Time-to-standard for new teams</div></div>
+  </div>
+
+  <p>This proposal covers a four-phase journey from Test Engineering Platform through an AI Engineering Operating System, grounded in proven industry patterns from GitHub, Google, Microsoft, and ThoughtWorks.</p>
+</section>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 2 — CURRENT STATE CHALLENGES
+═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="challenges">
+  <div class="section-label">02 — Current State</div>
+  <h2>The Cost of<br>Fragmentation</h2>
+
+  <!-- CHALLENGE DIAGRAM -->
+  <div class="diagram-wrap">
+    <div class="diagram-title">Current State — Duplicated Automation Across Repositories</div>
+    <svg viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg" width="100%">
+      <defs>
+        <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#4B6A8A"/>
+        </marker>
+      </defs>
+
+      <!-- Repo boxes -->
+      <g>
+        <!-- Repo A -->
+        <rect x="20" y="60" width="160" height="200" rx="8" fill="#122036" stroke="#1E3A5F" stroke-width="1.5"/>
+        <text x="100" y="85" font-family="Inter,sans-serif" font-size="12" font-weight="700" fill="#E2EAF4" text-anchor="middle">Repo: Product A</text>
+        <rect x="35" y="100" width="130" height="22" rx="4" fill="#1A2F45" stroke="#EF4444" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="100" y="115" font-family="JetBrains Mono,monospace" font-size="10" fill="#EF4444" text-anchor="middle">code-scan.sh</text>
+        <rect x="35" y="128" width="130" height="22" rx="4" fill="#1A2F45" stroke="#EF4444" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="100" y="143" font-family="JetBrains Mono,monospace" font-size="10" fill="#EF4444" text-anchor="middle">test-gen.py</text>
+        <rect x="35" y="156" width="130" height="22" rx="4" fill="#1A2F45" stroke="#EF4444" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="100" y="171" font-family="JetBrains Mono,monospace" font-size="10" fill="#EF4444" text-anchor="middle">regression.yml</text>
+        <rect x="35" y="184" width="130" height="22" rx="4" fill="#1A2F45" stroke="#EF4444" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="100" y="199" font-family="JetBrains Mono,monospace" font-size="10" fill="#EF4444" text-anchor="middle">security-scan.sh</text>
+        <rect x="35" y="212" width="130" height="22" rx="4" fill="#1A2F45" stroke="#EF4444" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="100" y="227" font-family="JetBrains Mono,monospace" font-size="10" fill="#EF4444" text-anchor="middle">qtest-upload.py</text>
+      </g>
+      <!-- Repo B -->
+      <g>
+        <rect x="200" y="60" width="160" height="200" rx="8" fill="#122036" stroke="#1E3A5F" stroke-width="1.5"/>
+        <text x="280" y="85" font-family="Inter,sans-serif" font-size="12" font-weight="700" fill="#E2EAF4" text-anchor="middle">Repo: Product B</text>
+        <rect x="215" y="100" width="130" height="22" rx="4" fill="#1A2F45" stroke="#EF4444" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="280" y="115" font-family="JetBrains Mono,monospace" font-size="10" fill="#EF4444" text-anchor="middle">scan-code.sh</text>
+        <rect x="215" y="128" width="130" height="22" rx="4" fill="#1A2F45" stroke="#EF4444" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="280" y="143" font-family="JetBrains Mono,monospace" font-size="10" fill="#EF4444" text-anchor="middle">generate-tests.py</text>
+        <rect x="215" y="156" width="130" height="22" rx="4" fill="#1A2F45" stroke="#EF4444" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="280" y="171" font-family="JetBrains Mono,monospace" font-size="10" fill="#EF4444" text-anchor="middle">run-tests.yml</text>
+        <rect x="215" y="184" width="130" height="22" rx="4" fill="#1A2F45" stroke="#EF4444" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="280" y="199" font-family="JetBrains Mono,monospace" font-size="10" fill="#EF4444" text-anchor="middle">sec-scan.sh</text>
+        <rect x="215" y="212" width="130" height="22" rx="4" fill="#1A2F45" stroke="#EF4444" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="280" y="227" font-family="JetBrains Mono,monospace" font-size="10" fill="#EF4444" text-anchor="middle">upload-qtest.py</text>
+      </g>
+      <!-- Repo N -->
+      <g>
+        <rect x="380" y="60" width="160" height="200" rx="8" fill="#122036" stroke="#1E3A5F" stroke-width="1.5"/>
+        <text x="460" y="85" font-family="Inter,sans-serif" font-size="12" font-weight="700" fill="#E2EAF4" text-anchor="middle">Repo: Product N</text>
+        <rect x="395" y="100" width="130" height="22" rx="4" fill="#1A2F45" stroke="#EF4444" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="460" y="115" font-family="JetBrains Mono,monospace" font-size="10" fill="#EF4444" text-anchor="middle">lint-and-scan.sh</text>
+        <rect x="395" y="128" width="130" height="22" rx="4" fill="#1A2F45" stroke="#EF4444" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="460" y="143" font-family="JetBrains Mono,monospace" font-size="10" fill="#EF4444" text-anchor="middle">ai-testgen.py</text>
+        <rect x="395" y="156" width="130" height="22" rx="4" fill="#1A2F45" stroke="#EF4444" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="460" y="171" font-family="JetBrains Mono,monospace" font-size="10" fill="#EF4444" text-anchor="middle">e2e-tests.yml</text>
+        <rect x="395" y="184" width="130" height="22" rx="4" fill="#1A2F45" stroke="#EF4444" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="460" y="199" font-family="JetBrains Mono,monospace" font-size="10" fill="#EF4444" text-anchor="middle">vuln-check.sh</text>
+        <rect x="395" y="212" width="130" height="22" rx="4" fill="#1A2F45" stroke="#EF4444" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="460" y="227" font-family="JetBrains Mono,monospace" font-size="10" fill="#EF4444" text-anchor="middle">qtest-sync.py</text>
+      </g>
+      <!-- Ellipsis -->
+      <text x="565" y="165" font-family="Inter,sans-serif" font-size="28" fill="#4B6A8A" text-anchor="middle">···</text>
+
+      <!-- Pain points panel -->
+      <rect x="610" y="60" width="270" height="200" rx="8" fill="rgba(239,68,68,0.06)" stroke="rgba(239,68,68,0.3)" stroke-width="1.5"/>
+      <text x="745" y="85" font-family="Inter,sans-serif" font-size="12" font-weight="700" fill="#EF4444" text-anchor="middle">⚠  Pain Points</text>
+      <text x="630" y="112" font-family="Inter,sans-serif" font-size="11.5" fill="#8BA3BE">• 35-45% duplicated effort</text>
+      <text x="630" y="134" font-family="Inter,sans-serif" font-size="11.5" fill="#8BA3BE">• Inconsistent security practices</text>
+      <text x="630" y="156" font-family="Inter,sans-serif" font-size="11.5" fill="#8BA3BE">• N×maintenance burden</text>
+      <text x="630" y="178" font-family="Inter,sans-serif" font-size="11.5" fill="#8BA3BE">• Slow engineer onboarding</text>
+      <text x="630" y="200" font-family="Inter,sans-serif" font-size="11.5" fill="#8BA3BE">• No governance / auditability</text>
+      <text x="630" y="222" font-family="Inter,sans-serif" font-size="11.5" fill="#8BA3BE">• Quality varies by team</text>
+      <text x="630" y="244" font-family="Inter,sans-serif" font-size="11.5" fill="#8BA3BE">• AI readiness blocked</text>
+
+      <!-- Labels -->
+      <text x="280" y="290" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A" text-anchor="middle">Same automation, different names, every repository</text>
+    </svg>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Challenge</th><th>Current State</th><th>Business Impact</th><th>Severity</th></tr></thead>
+      <tbody>
+        <tr><td>Duplicated Automation</td><td>Each repo builds own test, scan, upload scripts</td><td>35–45% wasted engineering hours</td><td><span class="badge badge-green">Critical</span></td></tr>
+        <tr><td>Inconsistent Practices</td><td>No standard for code quality, security, testing</td><td>Compliance risk, audit failures</td><td><span class="badge badge-green">Critical</span></td></tr>
+        <tr><td>Maintenance Overhead</td><td>N teams maintain N copies of the same tooling</td><td>Engineering time diverted from product</td><td><span class="badge badge-amber">High</span></td></tr>
+        <tr><td>Slow Onboarding</td><td>New repos take weeks to stand up automation</td><td>Delayed delivery, frustrated developers</td><td><span class="badge badge-amber">High</span></td></tr>
+        <tr><td>Governance Gap</td><td>No centralized visibility into engineering health</td><td>Executive blind spots; audit liability</td><td><span class="badge badge-amber">High</span></td></tr>
+        <tr><td>AI Readiness</td><td>Copilot/Agents have no standard APIs to call</td><td>AI investment yields poor ROI</td><td><span class="badge badge-blue">Medium</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 3 — VISION
+═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="vision">
+  <div class="section-label">03 — Strategic Vision</div>
+  <h2>Engineering Skills as<br>Enterprise Standard</h2>
+
+  <div class="callout">
+    <div class="callout-title">Vision Statement</div>
+    <p>Every engineering team across the organization invokes the same versioned, governed, tested skills — rather than re-implementing them. The Skills Repository becomes the engineering equivalent of an enterprise service bus: a reliable, observable, policy-enforced integration layer that every product team depends on and no single team owns alone.</p>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="diagram-title">Vision Architecture — Central Skills Repository as Engineering Backbone</div>
+    <svg viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg" width="100%">
+      <defs>
+        <marker id="arrf" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#1E6FD9"/>
+        </marker>
+        <marker id="arrc" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#00C2CB"/>
+        </marker>
+      </defs>
+
+      <!-- Central Hub -->
+      <rect x="310" y="130" width="280" height="120" rx="12" fill="rgba(30,111,217,0.15)" stroke="#1E6FD9" stroke-width="2"/>
+      <text x="450" y="162" font-family="Inter,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF" text-anchor="middle">Central Skills Repository</text>
+      <text x="450" y="180" font-family="Inter,sans-serif" font-size="11" fill="#8BA3BE" text-anchor="middle">org/engineering-skills</text>
+      <text x="360" y="205" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB">code-scan  test-gen  regression</text>
+      <text x="360" y="221" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB">security   architecture  release</text>
+      <text x="360" y="237" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB">qtest-upload  documentation  ...</text>
+
+      <!-- Product Repos (left column) -->
+      <rect x="20" y="80" width="150" height="50" rx="6" fill="#1A2F45" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="95" y="101" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#E2EAF4" text-anchor="middle">Repo: Product A</text>
+      <text x="95" y="117" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Business Logic Only</text>
+
+      <rect x="20" y="165" width="150" height="50" rx="6" fill="#1A2F45" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="95" y="186" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#E2EAF4" text-anchor="middle">Repo: Product B</text>
+      <text x="95" y="202" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Business Logic Only</text>
+
+      <rect x="20" y="250" width="150" height="50" rx="6" fill="#1A2F45" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="95" y="271" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#E2EAF4" text-anchor="middle">Repo: Product N</text>
+      <text x="95" y="287" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Business Logic Only</text>
+
+      <!-- Arrows left → center -->
+      <line x1="170" y1="105" x2="308" y2="172" stroke="#1E6FD9" stroke-width="1.5" marker-end="url(#arrf)"/>
+      <line x1="170" y1="190" x2="308" y2="190" stroke="#1E6FD9" stroke-width="1.5" marker-end="url(#arrf)"/>
+      <line x1="170" y1="275" x2="308" y2="210" stroke="#1E6FD9" stroke-width="1.5" marker-end="url(#arrf)"/>
+
+      <!-- Consumer column (right) -->
+      <rect x="730" y="40" width="155" height="44" rx="6" fill="#1A2F45" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="807" y="58" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#E2EAF4" text-anchor="middle">GitHub Actions</text>
+      <text x="807" y="74" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">CI/CD Pipelines</text>
+
+      <rect x="730" y="100" width="155" height="44" rx="6" fill="#1A2F45" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="807" y="118" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#E2EAF4" text-anchor="middle">GitHub Copilot</text>
+      <text x="807" y="134" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">AI Skill Invocation</text>
+
+      <rect x="730" y="160" width="155" height="44" rx="6" fill="#1A2F45" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="807" y="178" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#E2EAF4" text-anchor="middle">Claude Code / MCP</text>
+      <text x="807" y="194" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Agentic Automation</text>
+
+      <rect x="730" y="220" width="155" height="44" rx="6" fill="#1A2F45" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="807" y="238" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#E2EAF4" text-anchor="middle">VS Code / Cursor</text>
+      <text x="807" y="254" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">IDE Integration</text>
+
+      <rect x="730" y="280" width="155" height="44" rx="6" fill="#1A2F45" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="807" y="298" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#E2EAF4" text-anchor="middle">Internal Portal</text>
+      <text x="807" y="314" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Developer Self-Service</text>
+
+      <!-- Arrows center → right -->
+      <line x1="590" y1="175" x2="728" y2="62" stroke="#00C2CB" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrc)"/>
+      <line x1="590" y1="180" x2="728" y2="122" stroke="#00C2CB" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrc)"/>
+      <line x1="590" y1="190" x2="728" y2="182" stroke="#00C2CB" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrc)"/>
+      <line x1="590" y1="200" x2="728" y2="242" stroke="#00C2CB" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrc)"/>
+      <line x1="590" y1="210" x2="728" y2="302" stroke="#00C2CB" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrc)"/>
+
+      <!-- Label -->
+      <text x="95" y="350" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A" text-anchor="middle">invoke skills</text>
+      <text x="700" y="350" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A" text-anchor="middle">consume results</text>
+    </svg>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 4 — REFERENCE ARCHITECTURE
+═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="arch">
+  <div class="section-label">04 — Reference Architecture</div>
+  <h2>Repository Architecture<br>& Skill Structure</h2>
+
+  <div class="diagram-wrap">
+    <div class="diagram-title">Repository Architecture — Product Repo vs. Central Skills Repo</div>
+    <svg viewBox="0 0 900 400" xmlns="http://www.w3.org/2000/svg" width="100%">
+      <!-- Product Repo -->
+      <rect x="30" y="30" width="370" height="340" rx="10" fill="#0D1B2A" stroke="#1E3A5F" stroke-width="1.5"/>
+      <rect x="30" y="30" width="370" height="40" rx="10" fill="#1A2F45"/>
+      <rect x="30" y="60" width="370" height="10" rx="0" fill="#1A2F45"/>
+      <text x="215" y="56" font-family="Inter,sans-serif" font-size="13" font-weight="700" fill="#E2EAF4" text-anchor="middle">📦  Product Repository</text>
+
+      <text x="55" y="100" font-family="JetBrains Mono,monospace" font-size="11" fill="#7DD3FC">src/</text>
+      <text x="70" y="118" font-family="JetBrains Mono,monospace" font-size="11" fill="#86EFAC">  ├── business-logic/</text>
+      <text x="70" y="136" font-family="JetBrains Mono,monospace" font-size="11" fill="#86EFAC">  ├── api/</text>
+      <text x="70" y="154" font-family="JetBrains Mono,monospace" font-size="11" fill="#86EFAC">  └── models/</text>
+      <text x="55" y="176" font-family="JetBrains Mono,monospace" font-size="11" fill="#7DD3FC">.github/workflows/</text>
+      <text x="70" y="194" font-family="JetBrains Mono,monospace" font-size="11" fill="#F5A623">  ├── ci.yml        ← invokes skills</text>
+      <text x="70" y="212" font-family="JetBrains Mono,monospace" font-size="11" fill="#F5A623">  └── release.yml   ← invokes skills</text>
+      <text x="55" y="234" font-family="JetBrains Mono,monospace" font-size="11" fill="#7DD3FC">config/</text>
+      <text x="70" y="252" font-family="JetBrains Mono,monospace" font-size="11" fill="#86EFAC">  ├── skill-config.yaml</text>
+      <text x="70" y="270" font-family="JetBrains Mono,monospace" font-size="11" fill="#86EFAC">  └── environments/</text>
+
+      <rect x="50" y="292" width="330" height="58" rx="6" fill="rgba(16,185,129,0.08)" stroke="rgba(16,185,129,0.3)" stroke-width="1"/>
+      <text x="215" y="314" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#10B981" text-anchor="middle">✓  No engineering automation here</text>
+      <text x="215" y="332" font-family="Inter,sans-serif" font-size="11" fill="#8BA3BE" text-anchor="middle">All scanning, testing, validation</text>
+      <text x="215" y="348" font-family="Inter,sans-serif" font-size="11" fill="#8BA3BE" text-anchor="middle">delegated to Skills Repository</text>
+
+      <!-- Skills Repo -->
+      <rect x="500" y="30" width="370" height="340" rx="10" fill="#0D1B2A" stroke="#1E6FD9" stroke-width="2"/>
+      <rect x="500" y="30" width="370" height="40" rx="10" fill="rgba(30,111,217,0.2)"/>
+      <rect x="500" y="60" width="370" height="10" rx="0" fill="rgba(30,111,217,0.2)"/>
+      <text x="685" y="56" font-family="Inter,sans-serif" font-size="13" font-weight="700" fill="#E2EAF4" text-anchor="middle">🔧  Central Skills Repository</text>
+
+      <text x="525" y="100" font-family="JetBrains Mono,monospace" font-size="11" fill="#7DD3FC">skills/</text>
+      <text x="540" y="118" font-family="JetBrains Mono,monospace" font-size="11" fill="#00C2CB">  ├── code-scan/</text>
+      <text x="540" y="136" font-family="JetBrains Mono,monospace" font-size="11" fill="#00C2CB">  ├── test-generation/</text>
+      <text x="540" y="154" font-family="JetBrains Mono,monospace" font-size="11" fill="#00C2CB">  ├── regression/</text>
+      <text x="540" y="172" font-family="JetBrains Mono,monospace" font-size="11" fill="#00C2CB">  ├── qtest-upload/</text>
+      <text x="540" y="190" font-family="JetBrains Mono,monospace" font-size="11" fill="#00C2CB">  ├── security-review/</text>
+      <text x="540" y="208" font-family="JetBrains Mono,monospace" font-size="11" fill="#00C2CB">  ├── architecture-review/</text>
+      <text x="540" y="226" font-family="JetBrains Mono,monospace" font-size="11" fill="#00C2CB">  └── release-readiness/</text>
+      <text x="525" y="248" font-family="JetBrains Mono,monospace" font-size="11" fill="#7DD3FC">.github/workflows/   ← reusable</text>
+      <text x="525" y="266" font-family="JetBrains Mono,monospace" font-size="11" fill="#7DD3FC">docs/  tests/  templates/</text>
+
+      <rect x="520" y="290" width="330" height="58" rx="6" fill="rgba(30,111,217,0.08)" stroke="rgba(30,111,217,0.3)" stroke-width="1"/>
+      <text x="685" y="314" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#1E6FD9" text-anchor="middle">Each skill contains</text>
+      <text x="685" y="332" font-family="Inter,sans-serif" font-size="11" fill="#8BA3BE" text-anchor="middle">SKILL.md · Python · Shell · Prompts</text>
+      <text x="685" y="348" font-family="Inter,sans-serif" font-size="11" fill="#8BA3BE" text-anchor="middle">GitHub Actions · Tests · Templates</text>
+
+      <!-- Arrow between repos -->
+      <path d="M402 190 L498 190" stroke="#F59E0B" stroke-width="2" marker-end="url(#arrf)" stroke-dasharray="6,3"/>
+      <text x="450" y="182" font-family="Inter,sans-serif" font-size="10" fill="#F59E0B" text-anchor="middle">invokes</text>
+    </svg>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 5 — PHASE 1
+═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="phase1">
+  <div class="section-label">05 — Phase 1</div>
+  <h2>Enterprise Test<br>Engineering Platform</h2>
+  <p>Phase 1 establishes the foundation: a centralized set of test engineering skills invoked by every product repository via GitHub Actions. This delivers immediate value — eliminating test automation duplication and establishing a single pipeline from code commit to qTest.</p>
+
+  <h4>Phase 1 Skill Inventory</h4>
+  <div class="skill-grid">
+    <div class="skill-chip">code-scan</div>
+    <div class="skill-chip">test-generation</div>
+    <div class="skill-chip">test-validation</div>
+    <div class="skill-chip">regression-execution</div>
+    <div class="skill-chip">qtest-upload</div>
+    <div class="skill-chip">reporting</div>
+    <div class="skill-chip">github-checks</div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="diagram-title">Phase 1 — Developer Commit to qTest Sequence Flow</div>
+    <svg viewBox="0 0 900 340" xmlns="http://www.w3.org/2000/svg" width="100%">
+      <defs>
+        <marker id="arrs" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#1E6FD9"/>
+        </marker>
+      </defs>
+
+      <!-- Step boxes -->
+      <!-- Step 1: Developer -->
+      <rect x="20" y="120" width="100" height="60" rx="8" fill="#1A2F45" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="70" y="145" font-family="Inter,sans-serif" font-size="20" text-anchor="middle">👩‍💻</text>
+      <text x="70" y="165" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#E2EAF4" text-anchor="middle">Developer</text>
+      <text x="70" y="179" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Commits Code</text>
+
+      <!-- Arrow 1 -->
+      <line x1="120" y1="150" x2="155" y2="150" stroke="#1E6FD9" stroke-width="2" marker-end="url(#arrs)"/>
+
+      <!-- Step 2: GitHub -->
+      <rect x="157" y="120" width="100" height="60" rx="8" fill="#1A2F45" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="207" y="145" font-family="Inter,sans-serif" font-size="18" text-anchor="middle">⚡</text>
+      <text x="207" y="165" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#E2EAF4" text-anchor="middle">GitHub Action</text>
+      <text x="207" y="179" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Trigger</text>
+
+      <!-- Arrow 2 -->
+      <line x1="257" y1="150" x2="292" y2="150" stroke="#1E6FD9" stroke-width="2" marker-end="url(#arrs)"/>
+
+      <!-- Step 3: Code Scan -->
+      <rect x="294" y="120" width="100" height="60" rx="8" fill="rgba(30,111,217,0.15)" stroke="#1E6FD9" stroke-width="1.5"/>
+      <text x="344" y="145" font-family="Inter,sans-serif" font-size="18" text-anchor="middle">🔍</text>
+      <text x="344" y="165" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#E2EAF4" text-anchor="middle">code-scan</text>
+      <text x="344" y="179" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Skill</text>
+
+      <!-- Arrow 3 -->
+      <line x1="394" y1="150" x2="429" y2="150" stroke="#1E6FD9" stroke-width="2" marker-end="url(#arrs)"/>
+
+      <!-- Step 4: Test Gen -->
+      <rect x="431" y="120" width="100" height="60" rx="8" fill="rgba(30,111,217,0.15)" stroke="#1E6FD9" stroke-width="1.5"/>
+      <text x="481" y="145" font-family="Inter,sans-serif" font-size="18" text-anchor="middle">🧪</text>
+      <text x="481" y="165" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#E2EAF4" text-anchor="middle">test-gen</text>
+      <text x="481" y="179" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Skill</text>
+
+      <!-- Arrow 4 -->
+      <line x1="531" y1="150" x2="566" y2="150" stroke="#1E6FD9" stroke-width="2" marker-end="url(#arrs)"/>
+
+      <!-- Step 5: Regression -->
+      <rect x="568" y="120" width="100" height="60" rx="8" fill="rgba(30,111,217,0.15)" stroke="#1E6FD9" stroke-width="1.5"/>
+      <text x="618" y="145" font-family="Inter,sans-serif" font-size="18" text-anchor="middle">▶️</text>
+      <text x="618" y="165" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#E2EAF4" text-anchor="middle">regression</text>
+      <text x="618" y="179" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Skill</text>
+
+      <!-- Arrow 5 -->
+      <line x1="668" y1="150" x2="703" y2="150" stroke="#1E6FD9" stroke-width="2" marker-end="url(#arrs)"/>
+
+      <!-- Step 6: qTest -->
+      <rect x="705" y="120" width="100" height="60" rx="8" fill="rgba(0,194,203,0.12)" stroke="#00C2CB" stroke-width="1.5"/>
+      <text x="755" y="145" font-family="Inter,sans-serif" font-size="18" text-anchor="middle">📤</text>
+      <text x="755" y="165" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#E2EAF4" text-anchor="middle">qtest-upload</text>
+      <text x="755" y="179" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Skill</text>
+
+      <!-- Arrow 6 — returns -->
+      <path d="M755 180 Q755 260 450 270 Q145 280 70 200" fill="none" stroke="#10B981" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrs)"/>
+      <text x="450" y="288" font-family="Inter,sans-serif" font-size="10" fill="#10B981" text-anchor="middle">Results published to GitHub Checks → Developer Reviews</text>
+
+      <!-- Step labels above -->
+      <text x="70" y="110" font-family="Inter,sans-serif" font-size="9" fill="#4B6A8A" text-anchor="middle">STEP 1</text>
+      <text x="207" y="110" font-family="Inter,sans-serif" font-size="9" fill="#4B6A8A" text-anchor="middle">STEP 2</text>
+      <text x="344" y="110" font-family="Inter,sans-serif" font-size="9" fill="#4B6A8A" text-anchor="middle">STEP 3</text>
+      <text x="481" y="110" font-family="Inter,sans-serif" font-size="9" fill="#4B6A8A" text-anchor="middle">STEP 4</text>
+      <text x="618" y="110" font-family="Inter,sans-serif" font-size="9" fill="#4B6A8A" text-anchor="middle">STEP 5</text>
+      <text x="755" y="110" font-family="Inter,sans-serif" font-size="9" fill="#4B6A8A" text-anchor="middle">STEP 6</text>
+    </svg>
+  </div>
+
+  <h4>GitHub Actions Invocation Pattern</h4>
+  <div class="code-block">
+    <div class="lang-label">yaml — .github/workflows/ci.yml (product repository)</div>
+    <pre><span class="kw">name</span>: <span class="str">CI Pipeline</span>
+<span class="kw">on</span>: [push, pull_request]
+
+<span class="kw">jobs</span>:
+  <span class="kw">code-scan</span>:
+    <span class="kw">uses</span>: <span class="str">org/engineering-skills/.github/workflows/code-scan.yml@v2</span>
+    <span class="kw">with</span>:
+      <span class="kw">language</span>: <span class="str">python</span>
+      <span class="kw">severity-threshold</span>: <span class="str">high</span>
+    <span class="kw">secrets</span>: inherit
+
+  <span class="kw">test-generation</span>:
+    <span class="kw">needs</span>: code-scan
+    <span class="kw">uses</span>: <span class="str">org/engineering-skills/.github/workflows/test-generation.yml@v2</span>
+    <span class="kw">with</span>:
+      <span class="kw">framework</span>: <span class="str">pytest</span>
+      <span class="kw">coverage-target</span>: <span class="str">80</span>
+
+  <span class="kw">regression</span>:
+    <span class="kw">needs</span>: test-generation
+    <span class="kw">uses</span>: <span class="str">org/engineering-skills/.github/workflows/regression.yml@v2</span>
+
+  <span class="kw">qtest-upload</span>:
+    <span class="kw">needs</span>: regression
+    <span class="kw">uses</span>: <span class="str">org/engineering-skills/.github/workflows/qtest-upload.yml@v2</span>
+    <span class="kw">secrets</span>:
+      <span class="kw">QTEST_TOKEN</span>: ${{ secrets.QTEST_TOKEN }}</pre>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 6 — PHASE 2
+═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="phase2">
+  <div class="section-label">06 — Phase 2</div>
+  <h2>Enterprise Engineering<br>Skills Platform</h2>
+  <p>Phase 2 extends the platform across the full SDLC. Every engineering practice — security, architecture, compliance, observability, release readiness — becomes a reusable, versioned skill.</p>
+
+  <div class="diagram-wrap">
+    <div class="diagram-title">Phase 2 — SDLC Skills Coverage Map</div>
+    <svg viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg" width="100%">
+      <!-- SDLC Lane headers -->
+      <rect x="20" y="20" width="860" height="36" rx="6" fill="rgba(30,111,217,0.15)" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="70" y="44" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#E2EAF4" text-anchor="middle">DESIGN</text>
+      <text x="205" y="44" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#E2EAF4" text-anchor="middle">DEVELOP</text>
+      <text x="360" y="44" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#E2EAF4" text-anchor="middle">TEST</text>
+      <text x="520" y="44" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#E2EAF4" text-anchor="middle">SECURE</text>
+      <text x="680" y="44" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#E2EAF4" text-anchor="middle">RELEASE</text>
+      <text x="830" y="44" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#E2EAF4" text-anchor="middle">OPERATE</text>
+
+      <!-- Column dividers -->
+      <line x1="135" y1="20" x2="135" y2="400" stroke="#1E3A5F" stroke-width="1"/>
+      <line x1="280" y1="20" x2="280" y2="400" stroke="#1E3A5F" stroke-width="1"/>
+      <line x1="440" y1="20" x2="440" y2="400" stroke="#1E3A5F" stroke-width="1"/>
+      <line x1="600" y1="20" x2="600" y2="400" stroke="#1E3A5F" stroke-width="1"/>
+      <line x1="760" y1="20" x2="760" y2="400" stroke="#1E3A5F" stroke-width="1"/>
+
+      <!-- DESIGN skills -->
+      <rect x="28" y="70" width="98" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="77" y="88" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">arch-review</text>
+      <rect x="28" y="104" width="98" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="77" y="122" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">threat-model</text>
+      <rect x="28" y="138" width="98" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="77" y="156" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">api-governance</text>
+      <rect x="28" y="172" width="98" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="77" y="190" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">documentation</text>
+
+      <!-- DEVELOP skills -->
+      <rect x="143" y="70" width="128" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="207" y="88" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">ai-code-review</text>
+      <rect x="143" y="104" width="128" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="207" y="122" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">dependency-analysis</text>
+      <rect x="143" y="138" width="128" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="207" y="156" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">terraform-validation</text>
+      <rect x="143" y="172" width="128" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="207" y="190" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">k8s-validation</text>
+
+      <!-- TEST skills -->
+      <rect x="290" y="70" width="140" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="360" y="88" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">test-generation</text>
+      <rect x="290" y="104" width="140" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="360" y="122" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">regression-execution</text>
+      <rect x="290" y="138" width="140" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="360" y="156" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">performance-analysis</text>
+      <rect x="290" y="172" width="140" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="360" y="190" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">qtest-upload</text>
+
+      <!-- SECURE skills -->
+      <rect x="450" y="70" width="140" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="520" y="88" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">secure-code-review</text>
+      <rect x="450" y="104" width="140" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="520" y="122" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">security-hardening</text>
+      <rect x="450" y="138" width="140" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="520" y="156" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">compliance-validation</text>
+      <rect x="450" y="172" width="140" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="520" y="190" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">sbom-generation</text>
+
+      <!-- RELEASE skills -->
+      <rect x="610" y="70" width="140" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="680" y="88" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">release-readiness</text>
+      <rect x="610" y="104" width="140" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="680" y="122" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">cloud-best-practices</text>
+      <rect x="610" y="138" width="140" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="680" y="156" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">infra-validation</text>
+      <rect x="610" y="172" width="140" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="680" y="190" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">platform-governance</text>
+
+      <!-- OPERATE skills -->
+      <rect x="770" y="70" width="100" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="820" y="88" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">observability</text>
+      <rect x="770" y="104" width="100" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="820" y="122" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">alerting-review</text>
+      <rect x="770" y="138" width="100" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="820" y="156" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">runbook-gen</text>
+      <rect x="770" y="172" width="100" height="28" rx="5" fill="#122036" stroke="#1E3A5F" stroke-width="1"/>
+      <text x="820" y="190" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">sla-tracking</text>
+
+      <!-- Legend -->
+      <rect x="20" y="360" width="860" height="40" rx="6" fill="rgba(0,194,203,0.05)" stroke="rgba(0,194,203,0.2)" stroke-width="1"/>
+      <text x="450" y="376" font-family="Inter,sans-serif" font-size="11" fill="#8BA3BE" text-anchor="middle">17 standardized skills · versioned · tested · governed · available to every consumer in the enterprise</text>
+      <text x="450" y="393" font-family="Inter,sans-serif" font-size="11" fill="#4B6A8A" text-anchor="middle">Phase 2 target: 100% SDLC coverage</text>
+    </svg>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 7 — GITHUB COPILOT INTEGRATION
+═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="copilot">
+  <div class="section-label">07 — AI Integration</div>
+  <h2>GitHub Copilot &amp; AI<br>Consumer Architecture</h2>
+  <p>GitHub Copilot, Claude Code, and other AI consumers are first-class clients of the Skills Repository. They invoke skills through the same interfaces as GitHub Actions — making AI a force multiplier that amplifies standardized engineering practices rather than bypassing them.</p>
+
+  <div class="diagram-wrap">
+    <div class="diagram-title">GitHub Copilot → Skills Repository Invocation Flow</div>
+    <svg viewBox="0 0 900 280" xmlns="http://www.w3.org/2000/svg" width="100%">
+      <defs>
+        <marker id="arro" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#F59E0B"/>
+        </marker>
+      </defs>
+
+      <!-- Developer prompt -->
+      <rect x="20" y="100" width="180" height="80" rx="8" fill="#1A2F45" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="110" y="128" font-family="Inter,sans-serif" font-size="12" font-weight="600" fill="#E2EAF4" text-anchor="middle">Developer Prompt</text>
+      <text x="110" y="148" font-family="JetBrains Mono,monospace" font-size="10" fill="#86EFAC" text-anchor="middle">"Run architecture</text>
+      <text x="110" y="162" font-family="JetBrains Mono,monospace" font-size="10" fill="#86EFAC" text-anchor="middle"> review skill"</text>
+
+      <!-- Arrow 1 -->
+      <line x1="200" y1="140" x2="235" y2="140" stroke="#F59E0B" stroke-width="2" marker-end="url(#arro)"/>
+
+      <!-- Copilot -->
+      <rect x="237" y="100" width="160" height="80" rx="8" fill="rgba(245,158,11,0.1)" stroke="rgba(245,158,11,0.4)" stroke-width="1.5"/>
+      <text x="317" y="130" font-family="Inter,sans-serif" font-size="18" text-anchor="middle">🤖</text>
+      <text x="317" y="152" font-family="Inter,sans-serif" font-size="12" font-weight="600" fill="#E2EAF4" text-anchor="middle">GitHub Copilot</text>
+      <text x="317" y="168" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Skill Router</text>
+
+      <!-- Arrow 2 -->
+      <line x1="397" y1="140" x2="432" y2="140" stroke="#F59E0B" stroke-width="2" marker-end="url(#arro)"/>
+
+      <!-- Skills Repo -->
+      <rect x="434" y="70" width="180" height="140" rx="8" fill="rgba(30,111,217,0.12)" stroke="#1E6FD9" stroke-width="2"/>
+      <text x="524" y="98" font-family="Inter,sans-serif" font-size="12" font-weight="700" fill="#E2EAF4" text-anchor="middle">Skills Repository</text>
+      <text x="524" y="118" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">arch-review/</text>
+      <text x="524" y="134" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">  SKILL.md</text>
+      <text x="524" y="150" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">  prompts/</text>
+      <text x="524" y="166" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">  analysis.py</text>
+      <text x="524" y="182" font-family="JetBrains Mono,monospace" font-size="10" fill="#00C2CB" text-anchor="middle">  report.md.j2</text>
+
+      <!-- Arrow 3 -->
+      <line x1="614" y1="140" x2="649" y2="140" stroke="#10B981" stroke-width="2" marker-end="url(#arrs)"/>
+
+      <!-- Results -->
+      <rect x="651" y="100" width="230" height="80" rx="8" fill="rgba(16,185,129,0.08)" stroke="rgba(16,185,129,0.3)" stroke-width="1.5"/>
+      <text x="766" y="128" font-family="Inter,sans-serif" font-size="12" font-weight="600" fill="#E2EAF4" text-anchor="middle">Results Returned</text>
+      <text x="766" y="148" font-family="Inter,sans-serif" font-size="11" fill="#8BA3BE" text-anchor="middle">Architectural findings · ADR draft</text>
+      <text x="766" y="164" font-family="Inter,sans-serif" font-size="11" fill="#8BA3BE" text-anchor="middle">Published to GitHub Checks + Copilot</text>
+
+      <!-- Labels below -->
+      <text x="110" y="210" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A" text-anchor="middle">Natural language intent</text>
+      <text x="317" y="210" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A" text-anchor="middle">Resolves to skill API</text>
+      <text x="524" y="240" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A" text-anchor="middle">Executes skill, returns structured output</text>
+      <text x="766" y="210" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A" text-anchor="middle">Developer sees actionable report</text>
+    </svg>
+  </div>
+
+  <h4>Copilot Skill Invocation Examples</h4>
+  <div class="code-block">
+    <div class="lang-label">GitHub Copilot Chat — skill invocations</div>
+    <pre><span class="cmt"># Architecture Review</span>
+<span class="str">@copilot</span> <span class="kw">use architecture-review skill</span> on src/payment-service/
+
+<span class="cmt"># Threat Modeling</span>
+<span class="str">@copilot</span> <span class="kw">run threat-model skill</span> for the new OAuth2 integration
+
+<span class="cmt"># Test Generation</span>
+<span class="str">@copilot</span> <span class="kw">use test-generation skill</span> on UserController.py --framework pytest
+
+<span class="cmt"># Release Readiness</span>
+<span class="str">@copilot</span> <span class="kw">run release-readiness skill</span> before v2.4.0 deployment
+
+<span class="cmt"># Regression via CLI</span>
+npx engineering-skills regression --suite smoke --env staging</pre>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 8 — SECURITY
+═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="security">
+  <div class="section-label">08 — Security</div>
+  <h2>Supply Chain &amp; Platform<br>Security Architecture</h2>
+
+  <div class="diagram-wrap">
+    <div class="diagram-title">Security Architecture — SLSA Level 3 + Zero-Trust Skill Execution</div>
+    <svg viewBox="0 0 900 300" xmlns="http://www.w3.org/2000/svg" width="100%">
+      <!-- Outer border: supply chain -->
+      <rect x="15" y="15" width="870" height="270" rx="10" fill="rgba(239,68,68,0.04)" stroke="rgba(239,68,68,0.2)" stroke-width="1.5" stroke-dasharray="6,3"/>
+      <text x="450" y="36" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="rgba(239,68,68,0.6)" text-anchor="middle">Supply Chain Security Boundary (SLSA L3 · NIST SSDF · OWASP)</text>
+
+      <!-- RBAC box -->
+      <rect x="35" y="55" width="140" height="200" rx="8" fill="#122036" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="105" y="76" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#E2EAF4" text-anchor="middle">Access Control</text>
+      <text x="105" y="100" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">🔐 GitHub OIDC</text>
+      <text x="105" y="118" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">RBAC per skill</text>
+      <text x="105" y="136" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Federated identity</text>
+      <text x="105" y="154" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Secrets Manager</text>
+      <text x="105" y="172" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">No long-lived creds</text>
+
+      <!-- Artifact Integrity box -->
+      <rect x="200" y="55" width="160" height="200" rx="8" fill="#122036" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="280" y="76" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#E2EAF4" text-anchor="middle">Artifact Integrity</text>
+      <text x="280" y="100" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">🔏 Sigstore signing</text>
+      <text x="280" y="118" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">SBOM per release</text>
+      <text x="280" y="136" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Provenance attestation</text>
+      <text x="280" y="154" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Immutable tags</text>
+      <text x="280" y="172" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Dependency pinning</text>
+
+      <!-- Audit box -->
+      <rect x="385" y="55" width="160" height="200" rx="8" fill="#122036" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="465" y="76" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#E2EAF4" text-anchor="middle">Audit &amp; Visibility</text>
+      <text x="465" y="100" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">📋 Immutable logs</text>
+      <text x="465" y="118" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Execution tracing</text>
+      <text x="465" y="136" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Compliance reports</text>
+      <text x="465" y="154" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">SOC2 / ISO27001</text>
+      <text x="465" y="172" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Skill invocation log</text>
+
+      <!-- Vulnerability box -->
+      <rect x="570" y="55" width="160" height="200" rx="8" fill="#122036" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="650" y="76" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#E2EAF4" text-anchor="middle">Vulnerability Mgmt</text>
+      <text x="650" y="100" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">🛡 Dependabot</text>
+      <text x="650" y="118" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">CodeQL scanning</text>
+      <text x="650" y="136" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">CVE alerting</text>
+      <text x="650" y="154" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">SAST / DAST</text>
+      <text x="650" y="172" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Secret scanning</text>
+
+      <!-- Policy box -->
+      <rect x="755" y="55" width="130" height="200" rx="8" fill="#122036" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="820" y="76" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#E2EAF4" text-anchor="middle">Policy Engine</text>
+      <text x="820" y="100" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">⚙️ OPA / Rego</text>
+      <text x="820" y="118" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Policy-as-code</text>
+      <text x="820" y="136" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Skill gate rules</text>
+      <text x="820" y="154" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Automatic block</text>
+      <text x="820" y="172" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE" text-anchor="middle">Exception workflow</text>
+    </svg>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 9 — GOVERNANCE
+═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="governance">
+  <div class="section-label">09 — Governance</div>
+  <h2>Skill Lifecycle &amp;<br>Governance Model</h2>
+
+  <div class="diagram-wrap">
+    <div class="diagram-title">Skill Lifecycle — Proposal to Deprecation</div>
+    <svg viewBox="0 0 900 180" xmlns="http://www.w3.org/2000/svg" width="100%">
+      <defs>
+        <marker id="arrg" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#10B981"/>
+        </marker>
+      </defs>
+      <!-- Stages -->
+      <rect x="20" y="50" width="110" height="60" rx="8" fill="#1A2F45" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="75" y="78" font-family="Inter,sans-serif" font-size="18" text-anchor="middle">💡</text>
+      <text x="75" y="98" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#E2EAF4" text-anchor="middle">Propose</text>
+
+      <line x1="130" y1="80" x2="162" y2="80" stroke="#10B981" stroke-width="1.5" marker-end="url(#arrg)"/>
+
+      <rect x="164" y="50" width="110" height="60" rx="8" fill="#1A2F45" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="219" y="78" font-family="Inter,sans-serif" font-size="18" text-anchor="middle">🔬</text>
+      <text x="219" y="98" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#E2EAF4" text-anchor="middle">Develop</text>
+
+      <line x1="274" y1="80" x2="306" y2="80" stroke="#10B981" stroke-width="1.5" marker-end="url(#arrg)"/>
+
+      <rect x="308" y="50" width="110" height="60" rx="8" fill="#1A2F45" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="363" y="78" font-family="Inter,sans-serif" font-size="18" text-anchor="middle">✅</text>
+      <text x="363" y="98" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#E2EAF4" text-anchor="middle">EA Review</text>
+
+      <line x1="418" y1="80" x2="450" y2="80" stroke="#10B981" stroke-width="1.5" marker-end="url(#arrg)"/>
+
+      <rect x="452" y="50" width="110" height="60" rx="8" fill="#1A2F45" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="507" y="78" font-family="Inter,sans-serif" font-size="18" text-anchor="middle">🚀</text>
+      <text x="507" y="98" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#E2EAF4" text-anchor="middle">Publish v1.x</text>
+
+      <line x1="562" y1="80" x2="594" y2="80" stroke="#10B981" stroke-width="1.5" marker-end="url(#arrg)"/>
+
+      <rect x="596" y="50" width="110" height="60" rx="8" fill="#1A2F45" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="651" y="78" font-family="Inter,sans-serif" font-size="18" text-anchor="middle">📈</text>
+      <text x="651" y="98" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#E2EAF4" text-anchor="middle">Operate</text>
+
+      <line x1="706" y1="80" x2="738" y2="80" stroke="#10B981" stroke-width="1.5" marker-end="url(#arrg)"/>
+
+      <rect x="740" y="50" width="110" height="60" rx="8" fill="#1A2F45" stroke="#1E3A5F" stroke-width="1.5"/>
+      <text x="795" y="78" font-family="Inter,sans-serif" font-size="18" text-anchor="middle">🗂️</text>
+      <text x="795" y="98" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#E2EAF4" text-anchor="middle">Deprecate</text>
+
+      <!-- Sub-labels -->
+      <text x="75" y="128" font-family="Inter,sans-serif" font-size="9" fill="#4B6A8A" text-anchor="middle">RFC / ADR</text>
+      <text x="219" y="128" font-family="Inter,sans-serif" font-size="9" fill="#4B6A8A" text-anchor="middle">TDD + tests</text>
+      <text x="363" y="128" font-family="Inter,sans-serif" font-size="9" fill="#4B6A8A" text-anchor="middle">EA Board CAB</text>
+      <text x="507" y="128" font-family="Inter,sans-serif" font-size="9" fill="#4B6A8A" text-anchor="middle">Semver tagging</text>
+      <text x="651" y="128" font-family="Inter,sans-serif" font-size="9" fill="#4B6A8A" text-anchor="middle">SLA + metrics</text>
+      <text x="795" y="128" font-family="Inter,sans-serif" font-size="9" fill="#4B6A8A" text-anchor="middle">6-mo migration window</text>
+    </svg>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Governance Domain</th><th>Policy</th><th>Owner</th></tr></thead>
+      <tbody>
+        <tr><td>Skill Versioning</td><td>Semantic versioning (MAJOR.MINOR.PATCH); breaking changes require MAJOR bump with 6-month migration window</td><td>Platform Engineering</td></tr>
+        <tr><td>EA Approval</td><td>All new skills require Architecture Review Board sign-off before publish</td><td>Enterprise Architecture</td></tr>
+        <tr><td>Testing Requirement</td><td>Minimum 80% unit test coverage; integration test suite mandatory before v1.0 publish</td><td>QA Lead</td></tr>
+        <tr><td>Backward Compatibility</td><td>Minor/patch releases must be backward compatible; deprecation notices 90 days in advance</td><td>Platform Engineering</td></tr>
+        <tr><td>Change Management</td><td>All changes via Pull Request; two required reviewers (one EA, one security)</td><td>Engineering Managers</td></tr>
+        <tr><td>SLA</td><td>Skills must meet 99.5% availability SLA; p95 execution time published monthly</td><td>DevOps / SRE</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 10 — SCALABILITY
+═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="scalability">
+  <div class="section-label">10 — Scalability</div>
+  <h2>Platform Scale<br>Architecture</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Scale Tier</th><th>Repositories</th><th>Architecture Pattern</th><th>Key Concern</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Pilot</td><td>10</td><td>Single centralized repo; flat skill namespace</td><td>Developer adoption, feedback loops</td><td><span class="badge badge-green">Phase 1</span></td></tr>
+        <tr><td>Growth</td><td>100</td><td>Skill namespacing by domain; caching layer; metrics pipeline</td><td>Concurrent invocations, version drift</td><td><span class="badge badge-amber">Phase 2</span></td></tr>
+        <tr><td>Enterprise</td><td>1,000+</td><td>Multi-BU namespaces; federation; rate limiting; internal registry mirror</td><td>Governance at scale, multi-cloud</td><td><span class="badge badge-blue">Phase 3</span></td></tr>
+        <tr><td>Global</td><td>Unlimited</td><td>Backstage-integrated IDP; MCP server mesh; AI agent skill routing</td><td>AI governance, cross-region compliance</td><td><span class="badge badge-cyan">Phase 4</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 11 — ROI
+═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="roi">
+  <div class="section-label">11 — Business Case</div>
+  <h2>Return on Investment<br>Analysis</h2>
+
+  <div class="diagram-wrap">
+    <div class="diagram-title">3-Year ROI Model — Investment vs. Savings</div>
+    <svg viewBox="0 0 900 280" xmlns="http://www.w3.org/2000/svg" width="100%">
+      <!-- Grid lines -->
+      <line x1="80" y1="40" x2="880" y2="40" stroke="#1E3A5F" stroke-width="0.5" stroke-dasharray="4,4"/>
+      <line x1="80" y1="100" x2="880" y2="100" stroke="#1E3A5F" stroke-width="0.5" stroke-dasharray="4,4"/>
+      <line x1="80" y1="160" x2="880" y2="160" stroke="#1E3A5F" stroke-width="0.5" stroke-dasharray="4,4"/>
+      <line x1="80" y1="220" x2="880" y2="220" stroke="#1E3A5F" stroke-width="0.5" stroke-dasharray="4,4"/>
+
+      <!-- Y-axis labels -->
+      <text x="70" y="44" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A" text-anchor="end">$5M</text>
+      <text x="70" y="104" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A" text-anchor="end">$3.5M</text>
+      <text x="70" y="164" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A" text-anchor="end">$2M</text>
+      <text x="70" y="224" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A" text-anchor="end">$0.5M</text>
+
+      <!-- Year 1 bars -->
+      <text x="210" y="260" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#8BA3BE" text-anchor="middle">Year 1</text>
+      <rect x="150" y="172" width="50" height="48" rx="4" fill="rgba(239,68,68,0.7)"/>
+      <text x="175" y="168" font-family="Inter,sans-serif" font-size="10" fill="#EF4444" text-anchor="middle">$0.8M</text>
+      <text x="175" y="245" font-family="Inter,sans-serif" font-size="9" fill="#4B6A8A" text-anchor="middle">Investment</text>
+      <rect x="220" y="196" width="50" height="24" rx="4" fill="rgba(16,185,129,0.7)"/>
+      <text x="245" y="192" font-family="Inter,sans-serif" font-size="10" fill="#10B981" text-anchor="middle">$0.4M</text>
+      <text x="245" y="245" font-family="Inter,sans-serif" font-size="9" fill="#4B6A8A" text-anchor="middle">Savings</text>
+
+      <!-- Year 2 bars -->
+      <text x="490" y="260" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#8BA3BE" text-anchor="middle">Year 2</text>
+      <rect x="430" y="184" width="50" height="36" rx="4" fill="rgba(239,68,68,0.7)"/>
+      <text x="455" y="180" font-family="Inter,sans-serif" font-size="10" fill="#EF4444" text-anchor="middle">$0.6M</text>
+      <text x="455" y="245" font-family="Inter,sans-serif" font-size="9" fill="#4B6A8A" text-anchor="middle">Investment</text>
+      <rect x="500" y="115" width="50" height="105" rx="4" fill="rgba(16,185,129,0.7)"/>
+      <text x="525" y="111" font-family="Inter,sans-serif" font-size="10" fill="#10B981" text-anchor="middle">$1.75M</text>
+      <text x="525" y="245" font-family="Inter,sans-serif" font-size="9" fill="#4B6A8A" text-anchor="middle">Savings</text>
+
+      <!-- Year 3 bars -->
+      <text x="770" y="260" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#8BA3BE" text-anchor="middle">Year 3</text>
+      <rect x="710" y="196" width="50" height="24" rx="4" fill="rgba(239,68,68,0.7)"/>
+      <text x="735" y="192" font-family="Inter,sans-serif" font-size="10" fill="#EF4444" text-anchor="middle">$0.4M</text>
+      <text x="735" y="245" font-family="Inter,sans-serif" font-size="9" fill="#4B6A8A" text-anchor="middle">Investment</text>
+      <rect x="780" y="55" width="50" height="165" rx="4" fill="rgba(16,185,129,0.7)"/>
+      <text x="805" y="51" font-family="Inter,sans-serif" font-size="10" fill="#10B981" text-anchor="middle">$2.75M</text>
+      <text x="805" y="245" font-family="Inter,sans-serif" font-size="9" fill="#4B6A8A" text-anchor="middle">Savings</text>
+
+      <!-- ROI callout -->
+      <rect x="300" y="55" width="240" height="70" rx="8" fill="rgba(30,111,217,0.15)" stroke="#1E6FD9" stroke-width="1.5"/>
+      <text x="420" y="78" font-family="Inter,sans-serif" font-size="13" font-weight="700" fill="#FFFFFF" text-anchor="middle">3-Year Net ROI</text>
+      <text x="420" y="98" font-family="Inter,sans-serif" font-size="22" font-weight="800" fill="#10B981" text-anchor="middle">+$3.1M  /  +172%</text>
+      <text x="420" y="116" font-family="Inter,sans-serif" font-size="11" fill="#8BA3BE" text-anchor="middle">Breakeven: Month 14</text>
+    </svg>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Value Driver</th><th>Metric</th><th>Annual Value</th></tr></thead>
+      <tbody>
+        <tr><td>Duplicate Automation Eliminated</td><td>2,400 hrs/yr saved across 100 repos</td><td>$480,000</td></tr>
+        <tr><td>Faster Repository Onboarding</td><td>3 weeks → 3 days × 40 repos/yr</td><td>$320,000</td></tr>
+        <tr><td>Reduced Maintenance</td><td>1 team maintains vs. N teams</td><td>$600,000</td></tr>
+        <tr><td>Defect Reduction</td><td>30% fewer escaped defects via standardized scanning</td><td>$750,000</td></tr>
+        <tr><td>Compliance Automation</td><td>Manual audit prep eliminated</td><td>$200,000</td></tr>
+        <tr><td>Developer Productivity</td><td>20 min/day recovered per developer × 200 devs</td><td>$1,460,000</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 12 — ROADMAP
+═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="roadmap">
+  <div class="section-label">12 — Strategic Roadmap</div>
+  <h2>Four-Phase Journey to the<br>Engineering Operating System</h2>
+
+  <div class="diagram-wrap">
+    <div class="diagram-title">Strategic Roadmap 2025–2028</div>
+    <svg viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg" width="100%">
+      <!-- Timeline backbone -->
+      <line x1="80" y1="80" x2="860" y2="80" stroke="#1E3A5F" stroke-width="2"/>
+      <!-- Milestone markers -->
+      <circle cx="185" cy="80" r="12" fill="#1E6FD9" stroke="#3D8EF0" stroke-width="2"/>
+      <text x="185" y="85" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
+
+      <circle cx="385" cy="80" r="12" fill="#1E6FD9" stroke="#3D8EF0" stroke-width="2"/>
+      <text x="385" y="85" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
+
+      <circle cx="600" cy="80" r="12" fill="#122036" stroke="#1E6FD9" stroke-width="2"/>
+      <text x="600" y="85" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#1E6FD9" text-anchor="middle">3</text>
+
+      <circle cx="800" cy="80" r="12" fill="#122036" stroke="#4B6A8A" stroke-width="2"/>
+      <text x="800" y="85" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#4B6A8A" text-anchor="middle">4</text>
+
+      <!-- Phase 1 -->
+      <rect x="90" y="110" width="190" height="170" rx="8" fill="rgba(30,111,217,0.12)" stroke="#1E6FD9" stroke-width="1.5"/>
+      <text x="185" y="134" font-family="Inter,sans-serif" font-size="12" font-weight="700" fill="#E2EAF4" text-anchor="middle">Phase 1</text>
+      <text x="185" y="150" font-family="Inter,sans-serif" font-size="11" fill="#3D8EF0" text-anchor="middle">Test Engineering</text>
+      <text x="185" y="168" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A" text-anchor="middle">Q1–Q2 2025</text>
+      <text x="105" y="190" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE">• 7 test skills</text>
+      <text x="105" y="206" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE">• GitHub Actions integration</text>
+      <text x="105" y="222" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE">• qTest upload pipeline</text>
+      <text x="105" y="238" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE">• 10 pilot repos</text>
+      <text x="105" y="254" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE">• Governance model v1</text>
+
+      <!-- Phase 2 -->
+      <rect x="292" y="110" width="190" height="170" rx="8" fill="rgba(30,111,217,0.12)" stroke="#1E6FD9" stroke-width="1.5"/>
+      <text x="387" y="134" font-family="Inter,sans-serif" font-size="12" font-weight="700" fill="#E2EAF4" text-anchor="middle">Phase 2</text>
+      <text x="387" y="150" font-family="Inter,sans-serif" font-size="11" fill="#3D8EF0" text-anchor="middle">SDLC Platform</text>
+      <text x="387" y="168" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A" text-anchor="middle">Q3 2025–Q2 2026</text>
+      <text x="307" y="190" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE">• 17 SDLC skills</text>
+      <text x="307" y="206" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE">• Copilot integration</text>
+      <text x="307" y="222" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE">• 100 repos onboarded</text>
+      <text x="307" y="238" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE">• Security + compliance</text>
+      <text x="307" y="254" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE">• Backstage integration</text>
+
+      <!-- Phase 3 -->
+      <rect x="503" y="110" width="190" height="170" rx="8" fill="#122036" stroke="#243B55" stroke-width="1.5"/>
+      <text x="598" y="134" font-family="Inter,sans-serif" font-size="12" font-weight="700" fill="#E2EAF4" text-anchor="middle">Phase 3</text>
+      <text x="598" y="150" font-family="Inter,sans-serif" font-size="11" fill="#4B6A8A" text-anchor="middle">AI Engineering</text>
+      <text x="598" y="168" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A" text-anchor="middle">Q3 2026–Q2 2027</text>
+      <text x="518" y="190" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A">• MCP server integration</text>
+      <text x="518" y="206" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A">• AI agent consumers</text>
+      <text x="518" y="222" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A">• 500+ repos</text>
+      <text x="518" y="238" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A">• Multi-BU federation</text>
+      <text x="518" y="254" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A">• Skills SDK release</text>
+
+      <!-- Phase 4 -->
+      <rect x="703" y="110" width="160" height="170" rx="8" fill="#122036" stroke="#243B55" stroke-width="1.5"/>
+      <text x="783" y="134" font-family="Inter,sans-serif" font-size="12" font-weight="700" fill="#8BA3BE" text-anchor="middle">Phase 4</text>
+      <text x="783" y="150" font-family="Inter,sans-serif" font-size="11" fill="#4B6A8A" text-anchor="middle">Engineering OS</text>
+      <text x="783" y="168" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A" text-anchor="middle">2027–2028</text>
+      <text x="718" y="190" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A">• Unified Engineering OS</text>
+      <text x="718" y="206" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A">• 1,000+ repos</text>
+      <text x="718" y="222" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A">• Industry reference</text>
+      <text x="718" y="238" font-family="Inter,sans-serif" font-size="10" fill="#4B6A8A">• External SDK</text>
+
+      <!-- Legend -->
+      <rect x="80" y="296" width="14" height="10" rx="2" fill="#1E6FD9"/>
+      <text x="100" y="305" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE">Active Phase</text>
+      <rect x="200" y="296" width="14" height="10" rx="2" fill="#243B55"/>
+      <text x="220" y="305" font-family="Inter,sans-serif" font-size="10" fill="#8BA3BE">Future Phase</text>
+    </svg>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 13 — KPIs
+═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="kpis">
+  <div class="section-label">13 — Success Metrics</div>
+  <h2>KPIs &amp; Executive<br>Dashboard</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>KPI</th><th>Baseline</th><th>6-Month Target</th><th>12-Month Target</th><th>Owner</th></tr></thead>
+      <tbody>
+        <tr><td>Skills Reuse Rate</td><td>0%</td><td>60%</td><td>90%</td><td>Platform Engineering</td></tr>
+        <tr><td>Repositories Onboarded</td><td>0</td><td>25</td><td>100</td><td>Engineering Managers</td></tr>
+        <tr><td>Automation Coverage (SDLC)</td><td>~20%</td><td>50%</td><td>85%</td><td>DevOps Lead</td></tr>
+        <tr><td>Test Automation Coverage</td><td>Varies</td><td>60% all repos</td><td>80% all repos</td><td>QA Lead</td></tr>
+        <tr><td>Defect Escape Rate</td><td>Baseline TBD</td><td>−15%</td><td>−30%</td><td>QA / Security</td></tr>
+        <tr><td>Mean Time to Onboard Repo</td><td>~3 weeks</td><td>5 days</td><td>2 days</td><td>Platform Engineering</td></tr>
+        <tr><td>Engineering Hours Saved</td><td>0</td><td>800 hrs/qtr</td><td>2,400 hrs/qtr</td><td>CTO</td></tr>
+        <tr><td>Security Compliance Rate</td><td>~60%</td><td>80%</td><td>98%</td><td>CISO</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout">
+    <div class="callout-title">Industry Alignment</div>
+    <p>This platform aligns with the <strong>GitHub Skills</strong> ecosystem, <strong>Google Software Engineering</strong> principles (ownership, reliability, scale), <strong>Microsoft Engineering Playbook</strong> patterns, and is positioned on the <strong>ThoughtWorks Technology Radar</strong> "Adopt" ring for Platform Engineering. SLSA Level 3 compliance satisfies NIST SSDF and OWASP SAMM requirements.</p>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <p>Enterprise Engineering Skills Platform — Architecture Proposal v1.0 · Confidential &amp; Restricted<br>
+  InfiniAI Technologies · Platform Engineering · Enterprise Architecture</p>
+</footer>
+
+</body>
+</html>
